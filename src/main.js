@@ -3,199 +3,337 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader.js';
 import GUI from 'lil-gui';
-import {RGBELoader} from 'three/examples/jsm/loaders/RGBELoader.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+
 const dracoLoaderPath = "https://raw.githubusercontent.com/armouredmaoG/Recreation-Assets/main/draco/";
-const envPath = "https://cdn.jsdelivr.net/gh/armouredmaoG/Recreation-Assets@main/2k.hdr";
-//Debug
-const gui = new GUI();
 
-// Canvas
-const canvas = document.querySelector('canvas.webgl')
+const models = {
+    candyWrapper: "https://cdn.jsdelivr.net/gh/armouredmaoG/Recreation-Assets@main/chocolatina_silencio_c.glb",
+    canObject: "https://cdn.jsdelivr.net/gh/armouredmaoG/Recreation-Assets@main/can_silencio_c.glb",
+    bolsaObject: "https://cdn.jsdelivr.net/gh/armouredmaoG/Recreation-Assets@main/bolsa_silencio_c.glb",
+    zumoObject: "https://cdn.jsdelivr.net/gh/armouredmaoG/Recreation-Assets@main/zumo_silencio_c.glb"
+};
 
-// Scene
-const scene = new THREE.Scene()
-
-//Draco Loader
-const loader = new GLTFLoader();
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath(dracoLoaderPath);
-loader.setDRACOLoader(dracoLoader);
+const envStudio = "https://cdn.jsdelivr.net/gh/armouredmaoG/Recreation-Assets@main/studio_small_09_1k_low.hdr";
 
 //Sizes
 const sizes = {
-    width: window.innerWidth,
-    height: window.innerHeight
+    x: window.innerWidth,
+    y: window.innerHeight
 }
 
-//Renderer
-const renderer = new THREE.WebGLRenderer({canvas: canvas})
-renderer.setSize(sizes.width, sizes.height);
+//Debug
+// const gui = new GUI();
 
-//Cursor
-const cursor = {
-    x: 0,
-    y: 0
-}
+// Canvas
+const canvas = document.getElementById('root');
 
-window.addEventListener("mousemove", (e)=>{
-    cursor.x = e.clientX / sizes.width - 0.5;
-    cursor.y = e.clientY / sizes.height - 0.5;
-})
+// Scene
+const scene = new THREE.Scene();
+gsap.registerPlugin(ScrollTrigger);
+document.addEventListener("DOMContentLoaded", () => {
+  var preloader = document.getElementById("preloader");
+  var aceptar = document.querySelector("#aceptar");
+  var lateral = document.querySelector("#lateral");
+  var superiorstart = document.querySelector("#superiorstart");
+  var silenciostart = document.querySelector("#silenciostart");
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    50, // Field of view (FoV)
+    sizes.x / sizes.y, // Aspect ratio
+    0.1, // Near clipping
+    50 // Far clipping
+  );
+  camera.position.x = 0;
+  camera.position.y = 0;
+  camera.position.z = 12;
+  scene.add(camera);
 
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.enableZoom = true;
+  controls.update();
 
+  const renderer = new THREE.WebGLRenderer({canvas: canvas});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+ 
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  directionalLight.position.set(20, 0, 0); 
+  directionalLight.target.position.set(0, 0, 0);
+  scene.add(directionalLight);
 
-const loadingManager = new THREE.LoadingManager();
-loadingManager.onStart = () =>{
-    console.log("loading started");
-}
-loadingManager.onProgress = (url, loaded, total) =>{
-    console.log(`${url} loaded ${loaded} / ${total}`);
-}
-loadingManager.onLoad = () =>{
-    console.log("loading complete");
-}
-loadingManager.onError = () =>{
-    console.log("error occured");
-}
+  // Load the GLB file
+  const loader = new GLTFLoader();
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath(dracoLoaderPath);
+  loader.setDRACOLoader(dracoLoader);
 
-/**
- * Objects
- */
-const door = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/67987878ecfff5a72e8a8f8f_door.jpg");
-const doorAmbientTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.jsdelivr.net/gh/armouredmaoG/Recreation-Assets@main/ambientOcclusion.jpg");
-const doorMetalnessTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/679882aae68ab6a242e9f5f1_metalness.jpg");
-const doorRoughnessTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/679882aa71c9ba99a5ae632e_roughness.jpg");
-const doorNormalTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/6798812c2a289e9c90c6ae74_normal.jpg");
-const doorAlphaTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/679881bb8a779976f88faa6e_alpha.jpg");
-const doorHeightTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/679881f0a93b7dd2569e0a91_height.png");
-const mapCapTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/6798787819518c6721d2b9e8_1.png");
-const gradientTexture = new THREE.TextureLoader(loadingManager).load("https://cdn.prod.website-files.com/678f866a4e1fe9f87e767014/67987878979c58d8cc47df36_3.jpg");
-door.colorSpace = THREE.SRGBColorSpace;
-mapCapTexture.colorSpace = THREE.SRGBColorSpace;
-gradientTexture.colorSpace = THREE.SRGBColorSpace;
+  // Load HDR environment map
+  const rgbeLoader = new RGBELoader();
+  rgbeLoader.load(envStudio, function (texture) {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      scene.environment = texture;
+      scene.background = texture;
+  });
 
-//MeshStandard Material
-const material = new THREE.MeshStandardMaterial();
-// material.matcap = mapCapTexture;
-// gradientTexture.minFilter = THREE.NearestFilter;
-// gradientTexture.magFilter = THREE.NearestFilter;
-// gradientTexture.generateMipmaps = false;
-// material.gradientMap = gradientTexture;
-
-material.metalness = 1;
-material.roughness = 1;
-material.map = door;
-material.aoMap = doorAmbientTexture;
-material.aoMapIntensity = 1;
-material.displacementMap = doorHeightTexture;
-material.displacementScale = 0.1;
-material.metalnessMap = doorMetalnessTexture;
-material.roughnessMap = doorRoughnessTexture;
-material.normalMap = doorNormalTexture;
-material.normalScale.set(0.5, 0.5);
-
-// material.transparent = true;
-// material.alphaMap = doorAlphaTexture;
-
-gui.add(material, "metalness").min(0).max(1).step(0.001);
-gui.add(material, "roughness").min(0).max(1).step(0.001);
-
-
-const planeMesh = new THREE.Mesh(new THREE.PlaneGeometry(1,1.1,100, 100), material);
-planeMesh.position.x = -1.5;
-const sphereMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 64, 64), material);
-// sphereMesh.position.x = 1;
-const torusMesh = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.2, 64, 28), material);
-torusMesh.position.x = 1.5;
-
-scene.add(planeMesh, sphereMesh, torusMesh);
-
-//Lights
-
-// const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-// scene.add(ambientLight);
-
-// const pointLight = new THREE.PointLight(0xffffff, 30);
-// pointLight.position.x = 2;
-// pointLight.position.y = 3;
-// pointLight.position.z = 4;
-
-// scene.add(pointLight);
-
-//Envirnment Map
-
-const rgbeLoader = new RGBELoader();
-rgbeLoader.load(envPath, (envMap) => {
-    envMap.mapping = THREE.EquirectangularReflectionMapping;
-    scene.background = envMap;
-    scene.environment = envMap;
-})
-
-
-window.addEventListener("resize", (e)=>{
-    sizes.width = window.innerWidth;
-    sizes.height = window.innerHeight;
-    camera.aspect = sizes.width / sizes.height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
-})
-
-window.addEventListener("dblclick", (e)=>{
-    const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
-    if(!fullscreenElement)
-    {
-        if(canvas.requestFullscreen){
-            canvas.requestFullscreen();
-        }else if(canvas.webkitRequestFullscreen){
-            canvas.webkitRequestFullscreen();
-        }   
-    }
-    else
-    {
-        if(document.exitFullscreen){
-            document.exitFullscreen();
-        }else if(document.webkitExitFullscreen){
-            document.webkitExitFullscreen();
+  loader.load(models.candyWrapper, (gltf) => {
+    const model = gltf.scene;
+    let light = new THREE.PointLight("red", 1);
+    light.position.set(-5, -20, 5);
+    
+    model.traverse((node) => {
+        if (node.isMesh) {
+          let mesh = node;
+          mesh.material.metalness = 0;
+          mesh.material.roughness = 0;  
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;   
+        
         }
-    }
-})  
+    });
 
-/**
- * Camera
- */
-const aspectRatio = sizes.width / sizes.height; 
-const camera = new THREE.PerspectiveCamera(50, aspectRatio, 0.1, 30); // Perspective Camera
-camera.position.z = 8; //Camera positions for Perspective Camera
-scene.add(camera)
+    model.position.x = 0.5;
+    model.position.y = 2.5;
+    model.position.z = -5;
+    model.scale.set(0.05, 0.05, 0.05);
+    model.rotation.x = 0.1;
+    model.rotation.y = 1.4;
+    model.rotation.z = 1.4;
+    model.add(light);
+    scene.add(model);
+    gsap.from(model.position, {
+        y: -20,
+        duration: 4,
+        ease: "power4.inOut",
+    }),
+    gsap.to(model.rotation, {
+        duration: 4,
+        x: 2.625,
+        y: 0.4,
+        z: 5.82,
+        ease: "power4.easeInOut",
+        immediateRender: !1,
+    });
+  });
 
+  loader.load(models.bolsaObject, (gltf) => {
+    const model = gltf.scene;
+    let light = new THREE.PointLight("red", 1);
+    light.position.set(-5, -20, 5);
+    
+    model.traverse((node) => {
+        if (node.isMesh) {
+          let mesh = node;
 
-//Controls
+          mesh.material.metalness = 0;
+          mesh.material.roughness = 0.15;  
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.scale.set(100, 100, 100);
+        
+        }
+    });
 
-const controls = new OrbitControls(camera, canvas);
-controls.enableDamping = true;
+    model.position.x = -3.5;
+    model.position.y = 0;
+    model.position.z = 0;
+    model.scale.set(0.03, 0.03, 0.03);
+    model.rotation.x = -Math.PI / 2;
+    model.rotation.y = -0.2;
+    model.rotation.z = 0.1;
+    model.add(light);
+    scene.add(model);
+    gsap.from(model.position, {
+        y: -20,
+        duration: 4,
+        ease: "power4.inOut",
+    }),
+    gsap.from(model.rotation, {
+        duration: 4,
+        x: 0,
+        y: 0,
+        z: 0,
+        ease: "power4.easeInOut",
+        immediateRender: !1,
+    });
+  });
 
+  loader.load(models.canObject, (gltf) => {
+    const model = gltf.scene;
+    let light = new THREE.PointLight("red", 1);
+    light.position.set(-5, -20, 5);
+    
+    model.traverse((node) => {
+        if (node.isMesh) {
+            if(node.name === "Aluminum_Standard_Can_330ml_v_2"){
+                node.material.metalness = 0;
+                node.material.roughness = 0.2;
+                node.rotation.set(-(Math.PI / 2), 0, .37);
+            }else if(node.name === "Aluminum_Standard_Can_330ml_v_21"){
+                node.material.roughness = 0.3;
+                node.rotation.set(-(Math.PI / 2), 0, 1.57);
 
+            }else if(node.name === "Aluminum_Standard_Can_330ml_v_22"){
+                node.material.roughness = 0.3;
+                node.rotation.set(-(Math.PI / 2), 0, 0);
+            }
+            node.position.x = 0;
+            node.position.y = 0;
+            node.position.z = 0;     
+        }
+    });
+    model.rotation.set(-Math.PI / 2, 0, -3.1);
+    model.scale.set(0.025, 0.025, 0.025);
+    model.position.set(0, -2, 2);
+    model.add(light);
+    scene.add(model);
+    gsap.from(model.position, {
+        y: -20,
+        duration: 4,
+        ease: "power4.inOut",
+    }),
+    
+    gsap.from(model.rotation, {
+        duration: 4,
+        x: 0,
+        y: 0,
+        z: 0,
+        ease: "power4.easeInOut",
+        immediateRender: !1,
+    });
+  });
+  loader.load(models.zumoObject, (gltf) => {
+    const model = gltf.scene;
+    console.log("Zumo Model: ",model)
+    let light = new THREE.PointLight("red", 1);
+    light.position.set(-5, -20, 5);
+    
+    model.traverse((node) => {
+        if(node.isObject3D){
+            if(node.name === "Subdivision_Surface" || node.name === "Subdivision_Surface001" || node.name === "Subdivision_Surface002"){
+                node.position.set(0, -56.29, 0);
+            }
+        }
 
-const clock = new THREE.Clock();
-
-const tick = () =>{
-
-    let elapsedTime = clock.getElapsedTime();
-    sphereMesh.rotation.y = 0.5 * elapsedTime;
-    planeMesh.rotation.y = 0.5 * elapsedTime;
-    torusMesh.rotation.y = 0.5 * elapsedTime;
-
-    sphereMesh.rotation.y = -0.5 * elapsedTime;
-    planeMesh.rotation.y = -0.5 * elapsedTime;
-    torusMesh.rotation.y = -0.5 * elapsedTime;
-
-    //Update controls
+        if (node.isMesh) {
+            if(node.name === "Wrapper"){
+                node.position.set(-.76, 61.13, 18.16);
+                node.rotation.set(0, 0, 2.88); 
+                node.material.color.set(0xffffff);
+                node.material.side= THREE.DoubleSide; 
+                node.material.opacity= 0.7; // Ensures visibility from both sides
+                node.material.transparent= true; // Allows transparency
+                node.material.needsUpdate = true;
+            }else if(node.name === "Straw"){
+                node.position.set(32.15, 159.14, 19.83);
+                node.rotation.set(Math.PI / 2, -.26, Math.PI);
+                node.scale.set(1, -1, 1);
+            }else if(node.name === "Packaging-Box"){
+                node.position.set(-.76, 61.13, 18.16);
+                node.material.metalness = 0;
+                node.material.roughness = 0.5;
+            }else if(node.name === "Packaging-Foil"){
+                node.position.set(-.76, 61.13, 18.16);
+            }
+            console.log("Found mesh for Zumo:", node);
+            let mesh = node;
+        
+        }
+    });
+    model.add(light);
+    model.position.set(3.2, 0, 0);
+    model.scale.set(0.025, 0.025, 0.025);
+    scene.add(model);
+    gsap.from(model.position, {
+        y: -20,
+        duration: 4,
+        ease: "power4.inOut",
+    }),
+    gsap.from(model.rotation, {
+        duration: 4,
+        x: 0,
+        y: 0,
+        z: 0,
+        ease: "power4.easeInOut",
+        immediateRender: !1,
+    });
+  });
+  
+  
+  let clock = new THREE.Clock();
+  function animate() {
     controls.update();
-
-
     renderer.render(scene, camera);
-    window.requestAnimationFrame(tick);;
-}
+    requestAnimationFrame(animate);
+  }
 
-tick();
+  // Handle window resize
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  preloader.classList.add("ready");
+  document.fonts.ready.then(function () {
+    aceptar.classList.add("fonts");
+    silenciostart.classList.add("ready");
+    gsap.to("#root", {
+      filter: "blur(0px)",
+      ease: "power4.easeInOut",
+      immediateRender: !1,
+    });    
+    animate();//Float models
+    setTimeout(function () {
+      setTimeout(function () {
+        aceptar.classList.add("ready");
+      }, 4000),
+      gsap.to(silenciostart, {
+          duration: 1.5,
+          x: 0,
+          ease: "power4.easeOut",
+          immediateRender: !1,
+      }),
+      gsap.to("#superiormask div", {
+          delay: 1,
+          duration: 0.8,
+          y: 0,
+          stagger: 0.3,
+          ease: "power4.easeOut",
+          immediateRender: !1,
+      });
+    }, 500);
+  });
+
+  
+
+  const moveElement = (x, y) => {
+    gsap.to("#aceptar .aceptar_text", {
+      x: x,
+      y: y,
+      duration: 0.1,
+      ease: "power4.easeInOut",
+      immediateRender: false,
+    });
+  };
+  document.addEventListener("mousemove", (event) => {
+    moveElement(event.pageX, event.pageY);
+  });
+
+  aceptar.onclick = function () {
+    setTimeout(function () {
+      setTimeout(function () {
+        // printAudio.play();
+      }, 100);
+    }, 2000);
+    superiorstart.classList.add("ready");
+    lateral.classList.add("ready");
+    aceptar.classList.add("out");
+
+    ScrollTrigger.refresh();
+  };
+});
