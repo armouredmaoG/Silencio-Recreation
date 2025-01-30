@@ -213,21 +213,22 @@ document.addEventListener("DOMContentLoaded", () => {
     light.position.set(-5, -20, 5);
     
     model.traverse((node) => {
-        if(node.isObject3D){
-            if(node.name === "Subdivision_Surface" || node.name === "Subdivision_Surface001" || node.name === "Subdivision_Surface002"){
-                node.position.set(0, -56.29, 0);
-            }
-        }
+        // if(node.isObject3D){
+        //     if(node.name === "Subdivision_Surface" || node.name === "Subdivision_Surface001" || node.name === "Subdivision_Surface002"){
+        //         node.position.set(0, -56.29, 0);
+        //     }
+        // }
 
         if (node.isMesh) {
             if(node.name === "Wrapper"){
                 node.position.set(-.76, 61.13, 18.16);
+                // node.position.set(0, -56.29, 0);
                 node.rotation.set(0, 0, 2.88); 
                 node.material.color.set(0xffffff);
-                node.material.side= THREE.DoubleSide; 
                 node.material.opacity= 0.7; // Ensures visibility from both sides
                 node.material.transparent= true; // Allows transparency
                 node.material.needsUpdate = true;
+                node.scale.set(1, -1, 1);
             }else if(node.name === "Straw"){
                 node.position.set(32.15, 159.14, 19.83);
                 node.rotation.set(Math.PI / 2, -.26, Math.PI);
@@ -236,16 +237,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 node.position.set(-.76, 61.13, 18.16);
                 node.material.metalness = 0;
                 node.material.roughness = 0.5;
+                node.scale.set(1, -1, 1);
             }else if(node.name === "Packaging-Foil"){
                 node.position.set(-.76, 61.13, 18.16);
+                node.scale.set(1, -1, 1);
             }
             console.log("Found mesh for Zumo:", node);
-            let mesh = node;
         
         }
     });
     model.add(light);
     model.position.set(3.2, 0, 0);
+    model.rotation.set(0, -.3, -.6);
     model.scale.set(0.025, 0.025, 0.025);
     scene.add(model);
     gsap.from(model.position, {
