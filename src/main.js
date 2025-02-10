@@ -5,6 +5,12 @@ import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader.js';
 import GUI from 'lil-gui';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
+const lenis = new Lenis();
+lenis.on("scroll", ScrollTrigger.update);
+gsap.ticker.add((time) =>{
+  lenis.raf(time * 1000);
+})
+gsap.ticker.lagSmoothing(0);
 const dracoLoaderPath = "https://raw.githubusercontent.com/armouredmaoG/Recreation-Assets/main/draco/";
 
 const models = {
@@ -23,48 +29,110 @@ const sizes = {
 }
 
 //Debug
-// const gui = new GUI();
+const gui = new GUI();
 
 // Canvas
 const canvas = document.getElementById('root');
 
 // Scene
 const scene = new THREE.Scene();
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 document.addEventListener("DOMContentLoaded", () => {
   var preloader = document.getElementById("preloader");
+  var wrapper = document.querySelector("#wrapper");
   var aceptar = document.querySelector("#aceptar");
   var lateral = document.querySelector("#lateral");
   var superiorstart = document.querySelector("#superiorstart");
+  var superior = document.querySelector("#superior");
   var silenciostart = document.querySelector("#silenciostart");
+
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(
     50, // Field of view (FoV)
     sizes.x / sizes.y, // Aspect ratio
     0.1, // Near clipping
-    50 // Far clipping
+    30 // Far clipping
   );
   camera.position.x = 0;
   camera.position.y = 0;
   camera.position.z = 12;
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
   scene.add(camera);
 
-  const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.enableZoom = true;
-  controls.update();
+  gui.add(camera.position, 'x').min(-100).max(100).step(1);
+    gui.add(camera.position, 'y').min(-100).max(100).step(1);
+    gui.add(camera.position, 'z').min(1).max(100).step(1);
+  gui.add(camera.rotation, 'x').min(-100).max(100).step(0.01);
+    gui.add(camera.rotation, 'y').min(-100).max(100).step(0.01);
+    gui.add(camera.rotation, 'z').min(1).max(100).step(0.01);
+    
 
-  const renderer = new THREE.WebGLRenderer({canvas: canvas});
+  // const controls = new OrbitControls(camera, canvas);
+  // controls.enableDamping = true;
+  // controls.enableZoom = true;
+  // controls.update();
+
+  const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.physicallyCorrectLights = true;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.5;
+  canvas.appendChild(renderer.domElement);
  
   // Lighting
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0);
   scene.add(ambientLight);
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(20, 0, 0); 
-  directionalLight.target.position.set(0, 0, 0);
-  scene.add(directionalLight);
+  // const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.5);
+  // directionalLight1.position.set(5, 10, 7.5); 
+  // scene.add(directionalLight1);
+
+  function FloatingModel(
+    object, 
+    speed = 1, 
+    rotationIntensity = 1, 
+    floatIntensity = 1, 
+    floatingRange = [-0.1, 0.1]
+  ) {
+    // Capture the starting state
+    // const basePositionY = object.position.y;
+    const baseRotationX = object.rotation.x;
+    const baseRotationY = object.rotation.y;
+    const baseRotationZ = object.rotation.z;
+
+    let startTime = Math.random() * 10000;
+
+    function update(deltaTime) {
+        const elapsedTime = startTime + deltaTime;
+
+        // Apply rotation effect on top of the final GSAP rotation state
+        object.rotation.x = baseRotationX + Math.cos((elapsedTime / 4) * speed) / 8 * rotationIntensity;
+        object.rotation.y = baseRotationY + Math.sin((elapsedTime / 4) * speed) / 8 * rotationIntensity;
+        object.rotation.z = baseRotationZ + Math.sin((elapsedTime / 4) * speed) / 20 * rotationIntensity;
+
+        // Apply floating effect on top of the final GSAP position
+        let floatValue = Math.sin((elapsedTime / 4) * speed) / 10;
+        floatValue = THREE.MathUtils.mapLinear(floatValue, -0.1, 0.1, floatingRange[0], floatingRange[1]);
+        // object.position.y = basePositionY + floatValue * floatIntensity;
+    }
+
+    return update;
+}
+
+  const floatingEffects = [];
+
+  let clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    // Update all floating effects
+    let deltaTime = clock.getElapsedTime();
+    floatingEffects.forEach(updateEffect => updateEffect(deltaTime));
+    // Render scene
+    renderer.render(scene, camera);
+  }
+
 
   // Load the GLB file
   const loader = new GLTFLoader();
@@ -80,199 +148,162 @@ document.addEventListener("DOMContentLoaded", () => {
       scene.background = texture;
   });
 
+  let candyModel, bolsaModel, canModel, zumoModel
+
   loader.load(models.candyWrapper, (gltf) => {
-    const model = gltf.scene;
-    let light = new THREE.PointLight("red", 1);
-    light.position.set(-5, -20, 5);
+    let speed = 5, rotationIntensity = 1, floatIntensity = 1, floatingRange = [-0.05, 0.05];
+    candyModel = gltf.scene;
+    console.log(candyModel);
     
-    model.traverse((node) => {
+    candyModel.traverse((node) => {
         if (node.isMesh) {
           let mesh = node;
           mesh.material.metalness = 0;
           mesh.material.roughness = 0;  
           mesh.castShadow = true;
           mesh.receiveShadow = true;   
-        
         }
     });
+    
+    candyModel.position.x = 0.5;
+    candyModel.position.y = 2.5;
+    candyModel.position.z = -5;
+    candyModel.scale.set(0.05, 0.05, 0.05);
+    candyModel.rotation.x = 2.625;
+    candyModel.rotation.y = 0.4;
+    candyModel.rotation.z = 5.82;
 
-    model.position.x = 0.5;
-    model.position.y = 2.5;
-    model.position.z = -5;
-    model.scale.set(0.05, 0.05, 0.05);
-    model.rotation.x = 0.1;
-    model.rotation.y = 1.4;
-    model.rotation.z = 1.4;
-    model.add(light);
-    scene.add(model);
-    gsap.from(model.position, {
-        y: -20,
-        duration: 4,
-        ease: "power4.inOut",
-    }),
-    gsap.to(model.rotation, {
-        duration: 4,
-        x: 2.625,
-        y: 0.4,
-        z: 5.82,
-        ease: "power4.easeInOut",
-        immediateRender: !1,
+    // gui.add(candyModel.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
+    // gui.add(candyModel.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
+    // gui.add(candyModel.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
+    // model.add(light);
+    scene.add(candyModel);
+    const floatingEffect = FloatingModel(candyModel, speed, rotationIntensity, floatIntensity, floatingRange);
+    floatingEffects.push(floatingEffect);
+    gsap.from(candyModel.position, {
+      y: -20,
+      duration: 4,
+      ease: "power4.inOut",
+      // onComplete: () => {
+      //     // Start floating effect after animation
+          
+      // }
     });
+    animate();
+
   });
 
+
   loader.load(models.bolsaObject, (gltf) => {
-    const model = gltf.scene;
-    let light = new THREE.PointLight("red", 1);
-    light.position.set(-5, -20, 5);
+    let speed = 5, rotationIntensity = 1, floatIntensity = 1, floatingRange = [-0.05, 0.05];
+    bolsaModel = gltf.scene;
+    // let light = new THREE.PointLight("red", 1);
+    // light.position.set(-5, -20, 5);
     
-    model.traverse((node) => {
+    bolsaModel.traverse((node) => {
         if (node.isMesh) {
           let mesh = node;
-
           mesh.material.metalness = 0;
-          mesh.material.roughness = 0.15;  
+          mesh.material.roughness = 0.15;
           mesh.castShadow = true;
           mesh.receiveShadow = true;
           mesh.scale.set(100, 100, 100);
-        
         }
     });
 
-    model.position.x = -3.5;
-    model.position.y = 0;
-    model.position.z = 0;
-    model.scale.set(0.03, 0.03, 0.03);
-    model.rotation.x = -Math.PI / 2;
-    model.rotation.y = -0.2;
-    model.rotation.z = 0.1;
-    model.add(light);
-    scene.add(model);
-    gsap.from(model.position, {
-        y: -20,
-        duration: 4,
-        ease: "power4.inOut",
-    }),
-    gsap.from(model.rotation, {
-        duration: 4,
-        x: 0,
-        y: 0,
-        z: 0,
-        ease: "power4.easeInOut",
-        immediateRender: !1,
+    bolsaModel.position.x = -3.5;
+    bolsaModel.position.y = 0;
+    bolsaModel.position.z = 1;
+    bolsaModel.scale.set(0.03, 0.03, 0.03);
+    bolsaModel.rotation.x = 1.4;
+    bolsaModel.rotation.y = 0.18;
+    bolsaModel.rotation.z = -0.01;
+    scene.add(bolsaModel);
+
+    // gui.add(model.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
+    // gui.add(model.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
+    // gui.add(model.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01); 
+
+    const floatingEffect = FloatingModel(bolsaModel, speed, rotationIntensity, floatIntensity, floatingRange);
+    floatingEffects.push(floatingEffect);
+    gsap.from(bolsaModel.position, {
+      y: -20,
+      duration: 4,
+      ease: "power4.inOut",
     });
+    animate();
+
   });
 
   loader.load(models.canObject, (gltf) => {
-    const model = gltf.scene;
-    let light = new THREE.PointLight("red", 1);
-    light.position.set(-5, -20, 5);
-    
-    model.traverse((node) => {
-        if (node.isMesh) {
-            if(node.name === "Aluminum_Standard_Can_330ml_v_2"){
-                node.material.metalness = 0;
-                node.material.roughness = 0.2;
-                node.rotation.set(-(Math.PI / 2), 0, .37);
-            }else if(node.name === "Aluminum_Standard_Can_330ml_v_21"){
-                node.material.roughness = 0.3;
-                node.rotation.set(-(Math.PI / 2), 0, 1.57);
-
-            }else if(node.name === "Aluminum_Standard_Can_330ml_v_22"){
-                node.material.roughness = 0.3;
-                node.rotation.set(-(Math.PI / 2), 0, 0);
-            }
-            node.position.x = 0;
-            node.position.y = 0;
-            node.position.z = 0;     
-        }
+    let speed = 5, rotationIntensity = 0.5, floatIntensity = 0.5, floatingRange = [-0.01, 0.01];
+    canModel = gltf.scene;
+    canModel.position.set(0, -2, 0);
+    canModel.scale.set(0.03, 0.03, 0.03);
+    canModel.rotation.set(Math.PI / 2, 0, 0);
+    scene.add(canModel);
+    const floatingEffect = FloatingModel(canModel, speed, rotationIntensity, floatIntensity, floatingRange);
+    floatingEffects.push(floatingEffect);
+    gsap.from(canModel.position, {
+      y: -20,
+      duration: 4,
+      ease: "power4.inOut",
     });
-    model.rotation.set(-Math.PI / 2, 0, -3.1);
-    model.scale.set(0.025, 0.025, 0.025);
-    model.position.set(0, -2, 2);
-    model.add(light);
-    scene.add(model);
-    gsap.from(model.position, {
-        y: -20,
-        duration: 4,
-        ease: "power4.inOut",
-    }),
-    
-    gsap.from(model.rotation, {
-        duration: 4,
-        x: 0,
-        y: 0,
-        z: 0,
-        ease: "power4.easeInOut",
-        immediateRender: !1,
+    gsap.from(canModel.rotation, {
+      x: 0,
+      y:0,
+      z:0,
+      duration: 4,
+      ease: "power4.inOut",
     });
+    animate();
   });
+
+
+  
   loader.load(models.zumoObject, (gltf) => {
-    const model = gltf.scene;
-    console.log("Zumo Model: ",model)
+    let speed = 5, rotationIntensity = 1, floatIntensity = 1, floatingRange = [-0.05, 0.05];
+    zumoModel = gltf.scene;
+    console.log("PacketWithStraw Model: ",zumoModel)
     let light = new THREE.PointLight("red", 1);
     light.position.set(-5, -20, 5);
     
-    model.traverse((node) => {
-        // if(node.isObject3D){
-        //     if(node.name === "Subdivision_Surface" || node.name === "Subdivision_Surface001" || node.name === "Subdivision_Surface002"){
-        //         node.position.set(0, -56.29, 0);
-        //     }
-        // }
-
+    zumoModel.traverse((node) => {
         if (node.isMesh) {
             if(node.name === "Wrapper"){
                 node.position.set(-.76, 61.13, 18.16);
-                // node.position.set(0, -56.29, 0);
                 node.rotation.set(0, 0, 2.88); 
                 node.material.color.set(0xffffff);
-                node.material.opacity= 0.7; // Ensures visibility from both sides
-                node.material.transparent= true; // Allows transparency
+                node.material.opacity= 0.7;
+                node.material.transparent= true;
                 node.material.needsUpdate = true;
                 node.scale.set(1, -1, 1);
-            }else if(node.name === "Straw"){
-                node.position.set(32.15, 159.14, 19.83);
-                node.rotation.set(Math.PI / 2, -.26, Math.PI);
-                node.scale.set(1, -1, 1);
             }else if(node.name === "Packaging-Box"){
-                node.position.set(-.76, 61.13, 18.16);
-                node.material.metalness = 0;
-                node.material.roughness = 0.5;
-                node.scale.set(1, -1, 1);
-            }else if(node.name === "Packaging-Foil"){
-                node.position.set(-.76, 61.13, 18.16);
-                node.scale.set(1, -1, 1);
+                  node.material.metalness = 0;
+                  node.material.roughness = 0.5;
+                  node.scale.set(1, -1, 1);
             }
             console.log("Found mesh for Zumo:", node);
         
         }
     });
-    model.add(light);
-    model.position.set(3.2, 0, 0);
-    model.rotation.set(0, -.3, -.6);
-    model.scale.set(0.025, 0.025, 0.025);
-    scene.add(model);
-    gsap.from(model.position, {
-        y: -20,
-        duration: 4,
-        ease: "power4.inOut",
-    }),
-    gsap.from(model.rotation, {
-        duration: 4,
-        x: 0,
-        y: 0,
-        z: 0,
-        ease: "power4.easeInOut",
-        immediateRender: !1,
+    zumoModel.add(light);
+    zumoModel.position.set(3.2, 0, 0);
+    zumoModel.rotation.set(0, -.3, -.6);
+    zumoModel.scale.set(0.025, 0.025, 0.025);
+    scene.add(zumoModel);
+    
+    const floatingEffect = FloatingModel(zumoModel, speed, rotationIntensity, floatIntensity, floatingRange);
+    floatingEffects.push(floatingEffect);
+    gsap.from(zumoModel.position, {
+      y: -20,
+      duration: 4,
+      ease: "power4.inOut",
     });
+    animate();
+    
   });
   
-  
-  let clock = new THREE.Clock();
-  function animate() {
-    controls.update();
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
 
   // Handle window resize
   window.addEventListener("resize", () => {
@@ -280,17 +311,79 @@ document.addEventListener("DOMContentLoaded", () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-
   preloader.classList.add("ready");
+  wrapper.classList.add("ready");
+ 
+  ScrollSmoother.create({
+    wrapper: "#wrapper",
+    content: "#content",
+    smooth: 1,
+    normalizeScroll: true,
+    ignoreMobileResize: true,
+    effects: true,
+    preventDefault: true
+  });
+  ScrollTrigger.create({
+    trigger: "#root",
+    start: "top 0",
+    end: "top -20000%",
+    scrub: .2,
+    pin: "#root",
+    pinSpacing: !1
+  });
+  // ScrollTrigger.create({
+  //   trigger: "#landing",
+  //   start: "top -40%",
+  //   end: "top -41%",
+  //   onEnter: o
+  // });
+  const mainHeadings = document.querySelectorAll(".main-heading");
+  function splitTextMain() {
+    mainHeadings.forEach(mainHeading => {
+        // First split: Break into characters and lines, assigning class "char"
+        var split1 = new SplitText(mainHeading, {
+            type: "chars, lines",
+            charsClass: "char"
+        });
+
+        // Second split: Break previously split chars into smaller parts, assigning class "charin"
+        var split2 = new SplitText(split1.chars, {  // Apply SplitText on already split chars
+            type: "chars",
+            charsClass: "char-in"
+        });
+    });
+  }
+  splitTextMain();
+
+  const subParas = document.querySelectorAll(".sub-para");
+  function splitTextSub() {
+    subParas.forEach(subPara => {
+        var split1 = new SplitText(subPara, {
+            type: "words, lines",
+            wordsClass: "word"
+        });
+
+        // Second split: Break previously split chars into smaller parts, assigning class "charin"
+        var split2 = new SplitText(split1.words, {  // Apply SplitText on already split chars
+            type: "words",
+            wordsClass: "word-in"
+        });
+    });
+  }
+  splitTextSub();
+
+  var h = document.querySelector("#content");
+  h.classList.add("fix");
+  window.scrollTo(0, 0);
   document.fonts.ready.then(function () {
     aceptar.classList.add("fonts");
     silenciostart.classList.add("ready");
-    gsap.to("#root", {
-      filter: "blur(0px)",
-      ease: "power4.easeInOut",
-      immediateRender: !1,
-    });    
-    animate();//Float models
+    // gsap.to("#root", {
+    //   filter: "blur(0px)",
+    //   ease: "power4.easeInOut",
+    //   immediateRender: !1,
+    // });  
+    // animate();//Float models
     setTimeout(function () {
       setTimeout(function () {
         aceptar.classList.add("ready");
@@ -327,15 +420,59 @@ document.addEventListener("DOMContentLoaded", () => {
     moveElement(event.pageX, event.pageY);
   });
 
+  
+
   aceptar.onclick = function () {
+    gsap.to(".char-in", {
+      delay: .3,
+      y: 0,
+      stagger: .03,
+      duration: 1,
+      ease: "power4.easeOut"
+    });
+    gsap.to("#landing h2", {
+      delay: 1,
+      y: 0,
+      duration: 1,
+      ease: "power4.easeOut"
+    });
+    gsap.to(".word-in", {
+      delay: 1,
+      y: 0,
+      stagger: .015,
+      duration: 1,
+      ease: "power4.easeOut"
+    });
     setTimeout(function () {
       setTimeout(function () {
         // printAudio.play();
       }, 100);
     }, 2000);
     superiorstart.classList.add("ready");
+    setTimeout(function() {
+      superiorstart.classList.add("out"),
+      superior.classList.add("ready")
+    }, 1000)
     lateral.classList.add("ready");
     aceptar.classList.add("out");
+    // **GSAP Camera Animation**
+    gsap.to(camera.position, {
+      z: 8,
+      duration: 1,  // Duration of animation in seconds
+      ease: "power2.inOut",
+      onUpdate: function () {
+          camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+      }
+    });
+    gsap.to(camera.rotation, {
+      x: 2,
+      duration: 1,  // Duration of animation in seconds
+      ease: "power2.inOut",
+      onUpdate: function () {
+          // camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+      }
+    });
+    // floatingEffects.push(FloatingModel(candyModel, 5, 1, 1, [-0.05, 0.05])); // Re-add floating
 
     ScrollTrigger.refresh();
   };
