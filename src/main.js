@@ -58,13 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
   camera.position.z = 12;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   scene.add(camera);
-
-  gui.add(camera.position, 'x').min(-100).max(100).step(1);
-    gui.add(camera.position, 'y').min(-100).max(100).step(1);
-    gui.add(camera.position, 'z').min(1).max(100).step(1);
-  gui.add(camera.rotation, 'x').min(-100).max(100).step(0.01);
-    gui.add(camera.rotation, 'y').min(-100).max(100).step(0.01);
-    gui.add(camera.rotation, 'z').min(1).max(100).step(0.01);
+  gui.add(camera.position, 'x', -100, 100).step(1).name('Camera X');
+  gui.add(camera.position, 'y', -100, 100).step(1).name('Camera Y');
+  gui.add(camera.position, 'z', 1, 100).step(1).name('Camera Z');
+  gui.add(camera.rotation, 'x', -100, 100).step(0.01).name('Camera Rotation X');
+  gui.add(camera.rotation, 'y', -100, 100).step(0.01).name('Camera Rotation Y');
+  gui.add(camera.rotation, 'z', 1, 100).step(0.01).name('Camera Rotation Z');
     
 
   // const controls = new OrbitControls(camera, canvas);
@@ -89,37 +88,69 @@ document.addEventListener("DOMContentLoaded", () => {
   // directionalLight1.position.set(5, 10, 7.5); 
   // scene.add(directionalLight1);
 
-  function FloatingModel(
-    object, 
-    speed = 1, 
-    rotationIntensity = 1, 
-    floatIntensity = 1, 
-    floatingRange = [-0.1, 0.1]
-  ) {
-    // Capture the starting state
-    // const basePositionY = object.position.y;
-    const baseRotationX = object.rotation.x;
-    const baseRotationY = object.rotation.y;
-    const baseRotationZ = object.rotation.z;
+//   function FloatingModel(
+//     object, 
+//     speed = 1, 
+//     rotationIntensity = 1, 
+//     floatIntensity = 1, 
+//     floatingRange = [-0.1, 0.1]
+//   ) {
+//     // Capture the starting state
+//     // const basePositionY = object.position.y;
+//     const baseRotationX = object.rotation.x;
+//     const baseRotationY = object.rotation.y;
+//     const baseRotationZ = object.rotation.z;
 
-    let startTime = Math.random() * 10000;
+//     let startTime = Math.random() * 10000;
 
-    function update(deltaTime) {
-        const elapsedTime = startTime + deltaTime;
+//     function update(deltaTime) {
+//         const elapsedTime = startTime + deltaTime;
 
-        // Apply rotation effect on top of the final GSAP rotation state
-        object.rotation.x = baseRotationX + Math.cos((elapsedTime / 4) * speed) / 8 * rotationIntensity;
-        object.rotation.y = baseRotationY + Math.sin((elapsedTime / 4) * speed) / 8 * rotationIntensity;
-        object.rotation.z = baseRotationZ + Math.sin((elapsedTime / 4) * speed) / 20 * rotationIntensity;
+//         // Apply rotation effect on top of the final GSAP rotation state
+//         object.rotation.x = baseRotationX + Math.cos((elapsedTime / 4) * speed) / 8 * rotationIntensity;
+//         object.rotation.y = baseRotationY + Math.sin((elapsedTime / 4) * speed) / 8 * rotationIntensity;
+//         object.rotation.z = baseRotationZ + Math.sin((elapsedTime / 4) * speed) / 20 * rotationIntensity;
 
-        // Apply floating effect on top of the final GSAP position
-        let floatValue = Math.sin((elapsedTime / 4) * speed) / 10;
-        floatValue = THREE.MathUtils.mapLinear(floatValue, -0.1, 0.1, floatingRange[0], floatingRange[1]);
-        // object.position.y = basePositionY + floatValue * floatIntensity;
-    }
+//         // Apply floating effect on top of the final GSAP position
+//         let floatValue = Math.sin((elapsedTime / 4) * speed) / 10;
+//         floatValue = THREE.MathUtils.mapLinear(floatValue, -0.1, 0.1, floatingRange[0], floatingRange[1]);
+//         // object.position.y = basePositionY + floatValue * floatIntensity;
+//     }
 
-    return update;
+//     return update;
+// }
+
+
+function FloatingModel(
+  object, 
+  speed = 1, 
+  rotationIntensity = 1, 
+  floatIntensity = 1, 
+  floatingRange = [-0.1, 0.1]
+) {
+  const baseRotationX = object.rotation.x;
+  const baseRotationY = object.rotation.y;
+  const baseRotationZ = object.rotation.z;
+
+  let startTime = Math.random() * 10000;
+
+  function update(deltaTime) {
+    if (!isRotationEnabled) return; // If rotation is disabled, skip the update
+
+    const elapsedTime = startTime + deltaTime;
+
+    object.rotation.x = baseRotationX + Math.cos((elapsedTime / 4) * speed) / 8 * rotationIntensity;
+    object.rotation.y = baseRotationY + Math.sin((elapsedTime / 4) * speed) / 8 * rotationIntensity;
+    object.rotation.z = baseRotationZ + Math.sin((elapsedTime / 4) * speed) / 20 * rotationIntensity;
+
+    let floatValue = Math.sin((elapsedTime / 4) * speed) / 10;
+    floatValue = THREE.MathUtils.mapLinear(floatValue, -0.1, 0.1, floatingRange[0], floatingRange[1]);
+    // object.position.y = basePositionY + floatValue * floatIntensity;
+  }
+
+  return update;
 }
+
 
   const floatingEffects = [];
 
@@ -148,8 +179,10 @@ document.addEventListener("DOMContentLoaded", () => {
       scene.background = texture;
   });
 
-  let candyModel, bolsaModel, canModel, zumoModel
+  let isRotationEnabled = true;  // Flag to control floating rotation
 
+
+  let candyModel, bolsaModel, canModel, zumoModel;
   loader.load(models.candyWrapper, (gltf) => {
     let speed = 5, rotationIntensity = 1, floatIntensity = 1, floatingRange = [-0.05, 0.05];
     candyModel = gltf.scene;
@@ -256,6 +289,10 @@ document.addEventListener("DOMContentLoaded", () => {
       duration: 4,
       ease: "power4.inOut",
     });
+
+    gui.add(canModel.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation X');
+    gui.add(canModel.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Y');
+    gui.add(canModel.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Z');
     animate();
   });
 
@@ -423,6 +460,8 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
   aceptar.onclick = function () {
+    isRotationEnabled = false; 
+
     gsap.to(".char-in", {
       delay: .3,
       y: 0,
@@ -464,6 +503,19 @@ document.addEventListener("DOMContentLoaded", () => {
           camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
       }
     });
+
+
+    gsap.to(canModel.rotation, {
+      x: 0,
+      y: 0,
+      z: 0,
+      duration: 1,  // Duration of animation in seconds
+      ease: "power2.inOut",
+      onUpdate: function () {
+          camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+      }
+    })
+
     ScrollTrigger.refresh();
   };
 });
