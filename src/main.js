@@ -29,7 +29,7 @@ const sizes = {
 }
 
 //Debug
-const gui = new GUI();
+// const gui = new GUI();
 
 // Canvas
 const canvas = document.getElementById('root');
@@ -58,12 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
   camera.position.z = 12;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   scene.add(camera);
-  gui.add(camera.position, 'x', -100, 100).step(1).name('Camera X');
-  gui.add(camera.position, 'y', -100, 100).step(1).name('Camera Y');
-  gui.add(camera.position, 'z', 1, 100).step(1).name('Camera Z');
-  gui.add(camera.rotation, 'x', -100, 100).step(0.01).name('Camera Rotation X');
-  gui.add(camera.rotation, 'y', -100, 100).step(0.01).name('Camera Rotation Y');
-  gui.add(camera.rotation, 'z', 1, 100).step(0.01).name('Camera Rotation Z');
+  // gui.add(camera.position, 'x', -100, 100).step(1).name('Camera X');
+  // gui.add(camera.position, 'y', -100, 100).step(1).name('Camera Y');
+  // gui.add(camera.position, 'z', 1, 100).step(1).name('Camera Z');
+  // gui.add(camera.rotation, 'x', -100, 100).step(0.01).name('Camera Rotation X');
+  // gui.add(camera.rotation, 'y', -100, 100).step(0.01).name('Camera Rotation Y');
+  // gui.add(camera.rotation, 'z', 1, 100).step(0.01).name('Camera Rotation Z');
     
 
   // const controls = new OrbitControls(camera, canvas);
@@ -216,11 +216,7 @@ function FloatingModel(
     gsap.from(candyModel.position, {
       y: -20,
       duration: 4,
-      ease: "power4.inOut",
-      // onComplete: () => {
-      //     // Start floating effect after animation
-          
-      // }
+      ease: "power1.inOut",
     });
     animate();
 
@@ -262,7 +258,7 @@ function FloatingModel(
     gsap.from(bolsaModel.position, {
       y: -20,
       duration: 4,
-      ease: "power4.inOut",
+      ease: "power1.inOut"
     });
     animate();
 
@@ -280,7 +276,7 @@ function FloatingModel(
     gsap.from(canModel.position, {
       y: -20,
       duration: 4,
-      ease: "power4.inOut",
+      ease: "power1.inOut",
     });
     gsap.from(canModel.rotation, {
       x: 0,
@@ -290,9 +286,9 @@ function FloatingModel(
       ease: "power4.inOut",
     });
 
-    gui.add(canModel.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation X');
-    gui.add(canModel.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Y');
-    gui.add(canModel.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Z');
+    // gui.add(canModel.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation X');
+    // gui.add(canModel.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Y');
+    // gui.add(canModel.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Z');
     animate();
   });
 
@@ -335,7 +331,7 @@ function FloatingModel(
     gsap.from(zumoModel.position, {
       y: -20,
       duration: 4,
-      ease: "power4.inOut",
+      ease: "power1.inOut"
     });
     animate();
     
@@ -460,7 +456,7 @@ function FloatingModel(
   
 
   aceptar.onclick = function () {
-    isRotationEnabled = false; 
+    // isRotationEnabled = false; 
 
     gsap.to(".char-in", {
       delay: .3,
@@ -496,6 +492,7 @@ function FloatingModel(
     aceptar.classList.add("out");
     // **GSAP Camera Animation**
     gsap.to(camera.position, {
+      y: 0,
       z: 8,
       duration: 1,  // Duration of animation in seconds
       ease: "power2.inOut",
@@ -504,17 +501,26 @@ function FloatingModel(
       }
     });
 
-
-    gsap.to(canModel.rotation, {
-      x: 0,
-      y: 0,
-      z: 0,
-      duration: 1,  // Duration of animation in seconds
-      ease: "power2.inOut",
-      onUpdate: function () {
-          camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
-      }
-    })
+    // gsap.to(canModel.rotation, {
+    //   x: 0,
+    //   y: -1.29,
+    //   z: 0,
+    //   duration: 1,  // Duration of animation in seconds
+    //   ease: "power2.inOut",
+    //   onUpdate: function () {
+    //       camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+    //   }
+    // })
+    // gsap.to(canModel.scale, {
+    //   x: 0.04,
+    //   y: 0.04,
+    //   z: 0.04,
+    //   duration: 1,  // Duration of animation in seconds
+    //   ease: "power2.inOut",
+    //   onUpdate: function () {
+    //       camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+    //   }
+    // })
 
     ScrollTrigger.refresh();
   };
