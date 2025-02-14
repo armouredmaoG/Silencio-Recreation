@@ -464,16 +464,6 @@ document.addEventListener("DOMContentLoaded", () => {
           camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
       }
     });
-    gsap.to(camera.rotation, {
-      x: 2,
-      duration: 1,  // Duration of animation in seconds
-      ease: "power2.inOut",
-      onUpdate: function () {
-          // camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
-      }
-    });
-    // floatingEffects.push(FloatingModel(candyModel, 5, 1, 1, [-0.05, 0.05])); // Re-add floating
-
     ScrollTrigger.refresh();
   };
 });
