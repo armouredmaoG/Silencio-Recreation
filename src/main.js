@@ -194,24 +194,16 @@ function FloatingModel(
 
     bolsaModel.position.x = -3.5;
     bolsaModel.position.y = 0;
-    bolsaModel.position.z = 1;
+    bolsaModel.position.z = 0.5;
     bolsaModel.scale.set(0.03, 0.03, 0.03);
-    bolsaModel.rotation.x = 1.4;
+    bolsaModel.rotation.x = -(Math.PI * 10/6);
     bolsaModel.rotation.y = 0.18;
     bolsaModel.rotation.z = -0.01;
     modelGroup.add(bolsaModel);
 
-    // gui.add(model.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
-    // gui.add(model.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
-    // gui.add(model.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01); 
 
     const floatingEffect = FloatingModel(bolsaModel, speed, rotationIntensity, floatIntensity, floatingRange);
     floatingEffects.push(floatingEffect);
-    // gsap.from(bolsaModel.position, {
-    //   y: -20,
-    //   duration: 4,
-    //   ease: "power1.inOut"
-    // });
     animate();
 
   });
@@ -220,12 +212,12 @@ function FloatingModel(
     let speed = 5, rotationIntensity = 0.5, floatIntensity = 0.5, floatingRange = [-0.01, 0.01];
     canModel = gltf.scene;
     canModel.position.set(0, -2, 0);
-    canModel.scale.set(0.03, 0.03, 0.03);
-    canModel.rotation.set(Math.PI / 2, 0, 0);
+    canModel.scale.set(0.029, 0.029, 0.029);
+    canModel.rotation.set(Math.PI / 2, Math.PI * 1.5, 0);
     modelGroup.add(canModel);
     const floatingEffect = FloatingModel(canModel, speed, rotationIntensity, floatIntensity, floatingRange);
     floatingEffects.push(floatingEffect);
-    // gsap.from(canModel.position, {
+
     //   y: -20,
     //   duration: 4,
     //   ease: "power1.inOut",
@@ -238,9 +230,6 @@ function FloatingModel(
       ease: "power4.inOut",
     });
 
-    // gui.add(canModel.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation X');
-    // gui.add(canModel.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Y');
-    // gui.add(canModel.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01).name('Can Rotation Z');
     animate();
   });
 
@@ -257,16 +246,16 @@ function FloatingModel(
         if (node.isMesh) {
             if(node.name === "Wrapper"){
                 node.position.set(-.76, 61.13, 18.16);
-                node.rotation.set(0, 0, 2.88); 
+                // node.rotation.set(0, 0, 2.88); 
                 node.material.color.set(0xffffff);
                 node.material.opacity= 0.7;
                 node.material.transparent= true;
                 node.material.needsUpdate = true;
-                node.scale.set(1, -1, 1);
+                // node.scale.set(1, -1, 1);
             }else if(node.name === "Packaging-Box"){
                   node.material.metalness = 0;
-                  node.material.roughness = 0.5;
-                  node.scale.set(1, -1, 1);
+                  node.material.roughness = 5;
+                  // node.scale.set(1, -1, 1);
             }
             console.log("Found mesh for Zumo:", node);
         
@@ -274,29 +263,19 @@ function FloatingModel(
     });
     zumoModel.add(light);
     zumoModel.position.set(3.2, 0, 0);
-    zumoModel.rotation.set(Math.PI/3, -0.5, -0.3);
-    zumoModel.scale.set(0.025, 0.025, 0.025);
+    zumoModel.rotation.set(Math.PI/3, -0.5, -0.5);
+    zumoModel.scale.set(0.028, 0.028, 0.028);
     modelGroup.add(zumoModel);
     
     const floatingEffect = FloatingModel(zumoModel, speed, rotationIntensity, floatIntensity, floatingRange);
     floatingEffects.push(floatingEffect);
-    // gsap.from(zumoModel.position, {
-    //   y: -20,
-    //   duration: 4,
-    //   ease: "power1.inOut"
-    // });
+
     animate();
     
   });
 
 
   scene.add(modelGroup);
-
-  // gsap.from(modelGroup.rotate, {
-  //   z: -20,
-  //   duration: 4,
-  //   ease: "power1.inOut"
-  // });
   
 
   // Handle window resize
@@ -473,17 +452,22 @@ function FloatingModel(
     lateral.classList.add("ready");
     aceptar.classList.add("out");
     // **GSAP Camera Animation**
-    // gsap.to(camera.position, {
-    //   y: -Math.PI * 2,
-    //   duration: 1,  // Duration of animation in seconds
-    //   ease: "power2.inOut",
-    //   onUpdate: function () {
-    //       camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
-    //   }
-    // });
+    gsap.to(camera.position, {
+      z: 8,
+      duration: 4,  // Duration of animation in seconds
+      ease: "power4.inOut",
+      // onUpdate: function () {
+      //     camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+      // },
+      onComplete: function () {
+        const floatingEffect = FloatingModel(modelGroup, 3, 1, 1, [0.04, -0.04]);
+        floatingEffects.push(floatingEffect);
+        // animate();
+      }
+    });
     gsap.to(modelGroup.rotation, {
       x: -Math.PI/3,
-      duration: 1,
+      duration: 4,
       ease: "power4.inOut"
     });
 
