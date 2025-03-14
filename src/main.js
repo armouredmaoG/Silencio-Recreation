@@ -487,17 +487,17 @@ function FloatingModel(
     lateral.classList.add("ready");
     aceptar.classList.add("out");
     // **GSAP Camera Animation**
-    // gsap.to(camera.position, {
-    //   y: 0,
-    //   z: 8,
-    //   duration: 1,  // Duration of animation in seconds
-    //   ease: "power2.inOut",
-    //   onUpdate: function () {
-    //       camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
-    //   }
-    // });
+    gsap.to(camera.position, {
+      y: 0,
+      z: 8,
+      duration: 1,  // Duration of animation in seconds
+      ease: "power2.inOut",
+      onUpdate: function () {
+          camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+      }
+    });
     gsap.to(modelGroup.rotation, {
-      z: Math.PI,
+      x: Math.PI,
       duration: 6,
       ease: "power4.inOut"
     });
