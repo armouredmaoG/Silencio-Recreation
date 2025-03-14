@@ -36,6 +36,7 @@ const canvas = document.getElementById('root');
 
 // Scene
 const scene = new THREE.Scene();
+const axesHelper = new THREE.AxesHelper(5);
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 document.addEventListener("DOMContentLoaded", () => {
   var preloader = document.getElementById("preloader");
@@ -58,18 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   camera.position.z = 12;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   scene.add(camera);
-  // gui.add(camera.position, 'x', -100, 100).step(1).name('Camera X');
-  // gui.add(camera.position, 'y', -100, 100).step(1).name('Camera Y');
-  // gui.add(camera.position, 'z', 1, 100).step(1).name('Camera Z');
-  // gui.add(camera.rotation, 'x', -100, 100).step(0.01).name('Camera Rotation X');
-  // gui.add(camera.rotation, 'y', -100, 100).step(0.01).name('Camera Rotation Y');
-  // gui.add(camera.rotation, 'z', 1, 100).step(0.01).name('Camera Rotation Z');
-    
 
-  // const controls = new OrbitControls(camera, canvas);
-  // controls.enableDamping = true;
-  // controls.enableZoom = true;
-  // controls.update();
 
   const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -99,7 +89,7 @@ function FloatingModel(
   let startTime = Math.random() * 10000;
 
   function update(deltaTime) {
-    if (!isRotationEnabled) return; // If rotation is disabled, skip the update
+    if (!isRotationEnabled) return; 
 
     const elapsedTime = startTime + deltaTime;
 
@@ -109,7 +99,6 @@ function FloatingModel(
 
     let floatValue = Math.sin((elapsedTime / 4) * speed) / 10;
     floatValue = THREE.MathUtils.mapLinear(floatValue, -0.1, 0.1, floatingRange[0], floatingRange[1]);
-    // object.position.y = basePositionY + floatValue * floatIntensity;
   }
 
   return update;
@@ -144,8 +133,9 @@ function FloatingModel(
   });
 
   let isRotationEnabled = true;  // Flag to control floating rotation
-
+  
   let modelGroup = new THREE.Group();
+  modelGroup.add(axesHelper);
 
 
   let candyModel, bolsaModel, canModel, zumoModel;
@@ -166,16 +156,12 @@ function FloatingModel(
     
     candyModel.position.x = 0.5;
     candyModel.position.y = 2.5;
-    candyModel.position.z = -5;
-    candyModel.scale.set(0.05, 0.05, 0.05);
+    candyModel.position.z = 2.5;
+    candyModel.scale.set(0.03, 0.03, 0.03);
     candyModel.rotation.x = 2.625;
     candyModel.rotation.y = 0.4;
     candyModel.rotation.z = 5.82;
 
-    // gui.add(candyModel.rotation, 'x').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
-    // gui.add(candyModel.rotation, 'y').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
-    // gui.add(candyModel.rotation, 'z').min(-Math.PI / 2).max(Math.PI / 2).step(0.01);
-    // model.add(light);
     modelGroup.add(candyModel);
     const floatingEffect = FloatingModel(candyModel, speed, rotationIntensity, floatIntensity, floatingRange);
     floatingEffects.push(floatingEffect);
@@ -288,7 +274,7 @@ function FloatingModel(
     });
     zumoModel.add(light);
     zumoModel.position.set(3.2, 0, 0);
-    zumoModel.rotation.set(0, -.3, -.6);
+    zumoModel.rotation.set(Math.PI/3, -0.5, -0.3);
     zumoModel.scale.set(0.025, 0.025, 0.025);
     modelGroup.add(zumoModel);
     
@@ -487,18 +473,17 @@ function FloatingModel(
     lateral.classList.add("ready");
     aceptar.classList.add("out");
     // **GSAP Camera Animation**
-    gsap.to(camera.position, {
-      y: 0,
-      z: 8,
-      duration: 1,  // Duration of animation in seconds
-      ease: "power2.inOut",
-      onUpdate: function () {
-          camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
-      }
-    });
+    // gsap.to(camera.position, {
+    //   y: -Math.PI * 2,
+    //   duration: 1,  // Duration of animation in seconds
+    //   ease: "power2.inOut",
+    //   onUpdate: function () {
+    //       camera.lookAt(new THREE.Vector3(0, 0, 0)); // Ensure camera stays focused on the scene
+    //   }
+    // });
     gsap.to(modelGroup.rotation, {
-      x: Math.PI,
-      duration: 6,
+      x: -Math.PI/3,
+      duration: 1,
       ease: "power4.inOut"
     });
 
