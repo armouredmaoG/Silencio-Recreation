@@ -36,7 +36,7 @@ const canvas = document.getElementById('root');
 
 // Scene
 const scene = new THREE.Scene();
-const axesHelper = new THREE.AxesHelper(5);
+// const axesHelper = new THREE.AxesHelper(5);
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 document.addEventListener("DOMContentLoaded", () => {
   var preloader = document.getElementById("preloader");
@@ -135,7 +135,7 @@ function FloatingModel(
   let isRotationEnabled = true;  // Flag to control floating rotation
   
   let modelGroup = new THREE.Group();
-  modelGroup.add(axesHelper);
+  // modelGroup.add(axesHelper);
 
 
   let candyModel, bolsaModel, canModel, zumoModel;
